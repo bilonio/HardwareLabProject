@@ -8,7 +8,7 @@ LW=7'b0000011
 BEQ=7'b1100011,
 RR=7'b0110011)
 
-(output reg Zero, 
+(output wire Zero, 
 output reg [31:0] PC,dAddress,dWriteData,WriteBackData,
 input clk,rst,PCSrc,ALUSrc,RegWrite,MemToReg,loadPC,
 input wire [31:0] instr,dReadData,
@@ -30,7 +30,8 @@ regfile U0(.readData1(n1),
 alu U1(.result(alu_res), 
 .op1(rData1), 
 .op2(rData2),
-.alu_op(ALUCtrl)
+.alu_op(ALUCtrl),
+.zero(Zero)
 );
 
 
