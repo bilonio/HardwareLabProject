@@ -14,7 +14,7 @@ input clk,rst,PCSrc,ALUSrc,RegWrite,MemToReg,loadPC,
 input wire [31:0] instr,dReadData,
 input wire [3:0] ALUCtrl
 );
-reg [31:0] rData1,rData2,immediate,store,branch,branch_offset,wrbData;
+reg [31:0] rData1,rData2,immediate,store1,store2,branch1,branch2,branch_offset,wrbData,shamt;
 wire [31:0] alu_res,n1,n2;
 reg [4:0] rReg1,rReg2,wReg;
 
@@ -56,16 +56,32 @@ rReg1=instr[19:15];
 rReg2=instr[24:20];
 wReg=instr[11:7];
 
-//for immediate instructions
+//for immediate instructions 
 immediate=instr[31:20];
 immediate={{20{immediate[31]}},immediate};
+
+//for immediate shift instructions
+shamt=instr[24:20];
+shamt={{27{shamt[24]}},shamt};
+
 //for store instructions
-store=instr[31:20];
-store={{20{store[31]}},store};
+store1=instr[11:7];
+store1={{27{store1[11]}},store1};
+
+store2 = instr[11:5];
+store2={{25{store2[11]}},store2};
+
 //for branch instructions
-branch=instr[31:20];
-branch = {{20{branch[31]}}, branch};
-branch_offset=branch<<1;
+branch1=instr[11:7];
+branch1 = {{27{branch1[11]}}, branch1};
+
+branch2 = instr[31:25];
+branch2 = {{25{branch2[31]}}, branch2};
+branch2 = branch2 << 5;
+
+branch_offset = branch1 | branch2 ;
+branch_offset = {{20{branch_offset[11]}},branch_offset};
+branch_offset = branch_offset<<1;
 
 //mux for deciding the 2nd operand of alu (op2)
 if(ALUSrc) begin
