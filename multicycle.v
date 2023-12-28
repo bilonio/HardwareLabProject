@@ -1,5 +1,6 @@
 `include "datapath.v"
 `include "ram.v"
+`include "rom.v"
 module multicycle 
 #(parameter [31:0] INITIAL_PC=32'h00400000,
 parameter [6:0] SW=7'b0100011,
@@ -32,13 +33,15 @@ datapath U0(.PC(PC),
 .PCSrc(pcssrc)
 );
 
-DATA_MEMORY ram(.we(MemWrite));
+DATA_MEMORY ram(.we(MemWrite),.dout(dReadData),.din(dWriteData),.addr(dAddress[8:0]));
+
+INSTRUCTION_MEMORY rom(.addr(PC[8:0]),.dout(instr));
 
 
 always @(posedge clk) begin
 case(instr[6:0])
 //STORE, LOAD INSTRUCTIONS
-SW : begin regwrite = 0; MemWrite = 1; end  
+SW : begin regwrite = 0; MemWrite = 1; aluctrl = 4'b0010; alusrc = 1; end  
 LW : begin 
     alusrc=1; aluctrl = 4'b0010; regwrite = 1; memtoreg=1; loadpc=1; MemRead = 1;
     end
@@ -96,7 +99,8 @@ RR: begin
     end
     endcase
 end
-default : begin alusrc = 0; aluctrl = 0; loadpc = 0; regwrite = 0; memtoreg=0; pcsrc = 0; end
+default : begin alusrc = 0; aluctrl = 0; loadpc = 0; regwrite = 0; memtoreg=0; pcsrc = 0; 
+MemWrite = 0; end
 endcase
 end
 endmodule 
