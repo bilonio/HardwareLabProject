@@ -1,12 +1,7 @@
 `include "alu.v"
 `include "regfile.v"
 module datapath 
-#(parameter [31:0] INITIAL_PC=32'h00400000,
-parameter [6:0] SW=7'b0100011,
-LW=7'b0000011
-,IMMEDIATE=7'b0010011,
-BEQ=7'b1100011,
-RR=7'b0110011)
+#(parameter [31:0] INITIAL_PC=32'h00400000)
 
 (output wire Zero, 
 output reg [31:0] PC,dAddress,dWriteData,WriteBackData,
