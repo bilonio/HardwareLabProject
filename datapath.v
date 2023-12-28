@@ -14,7 +14,7 @@ input clk,rst,PCSrc,ALUSrc,RegWrite,MemToReg,loadPC,
 input wire [31:0] instr,dReadData,
 input wire [3:0] ALUCtrl
 );
-reg [31:0] rData1,rData2,immediate,store1,store2,branch1,branch2,branch_offset,wrbData,shamt;
+reg [31:0] rData1,rData2,immediate,store_off,branch_offset,wrbData;
 wire [31:0] alu_res,n1,n2;
 reg [4:0] rReg1,rReg2,wReg;
 
@@ -39,67 +39,64 @@ alu U1(.result(alu_res),
 always @(posedge clk or posedge rst) begin 
 //update PC or reset
 if(rst) begin 
-    PC=INITIAL_PC;
+    PC = INITIAL_PC;
 end
 
 else if (loadPC) begin 
 if(PCSrc) begin 
-    PC=PC+branch_offset;
+    PC = PC+branch_offset;
 end
 else begin 
-    PC=PC+4;
+    PC = PC+4;
 end
 end
 
 //decoding instructions 
-rReg1=instr[19:15];
-rReg2=instr[24:20];
-wReg=instr[11:7];
+rReg1 = instr[19:15];
+rReg2 = instr[24:20];
+wReg = instr[11:7];
 
 //for immediate instructions 
-immediate=instr[31:20];
-immediate={{20{immediate[31]}},immediate};
-
-//for immediate shift instructions
-shamt=instr[24:20];
-shamt={{27{shamt[24]}},shamt};
+immediate = instr[31:20];
+immediate = {{20{immediate[11]}},immediate};
 
 //for store instructions
-store1=instr[11:7];
-store1={{27{store1[11]}},store1};
-
-store2 = instr[11:5];
-store2={{25{store2[11]}},store2};
+store_off = {instr[31:25], instr[11:7]};
+store_off = {{20{store_off[11]}},store_off};
 
 //for branch instructions
-branch1=instr[11:7];
-branch1 = {{27{branch1[11]}}, branch1};
-
-branch2 = instr[31:25];
-branch2 = {{25{branch2[31]}}, branch2};
-branch2 = branch2 << 5;
-
-branch_offset = branch1 | branch2 ;
+branch_offset[11|4:1] = instr[11:7];
+branch_offset[12|10:5] = instr[31:25];
 branch_offset = {{20{branch_offset[11]}},branch_offset};
 branch_offset = branch_offset<<1;
 
 //mux for deciding the 2nd operand of alu (op2)
 if(ALUSrc) begin
-    rData2<=immediate;
+    case(ALUCtrl)
+    4'b1001, 4'b1000, 4'b1010 : 
+        rData2 = immediate[4:0];
+    4'b0010 : begin 
+        if(RegWrite) begin
+            rData2 = immediate;
+        end
+        else rData2 = store_off;
+    end
+    default : rData2 <= immediate;
+    endcase
 end
 else begin
-    rData2<=n2;
+    rData2 <= n2;
 end
-rData1<=n1;
+rData1 <= n1;
 
 //mux for writing to register file
 if(MemToReg) begin
-        wrbData=dReadData;
-        WriteBackData=dReadData;
+        wrbData = dReadData;
+        WriteBackData = dReadData;
     end
     else begin
-        wrbData=alu_res;
-        WriteBackData=alu_res;
+        wrbData = alu_res;
+        WriteBackData = alu_res;
     end
 end
 endmodule
