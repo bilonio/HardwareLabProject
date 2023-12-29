@@ -78,10 +78,10 @@ end
 
 else if (loadPC) begin 
 if(PCSrc) begin 
-    PC = PC+branch_offset;
+    PC = PC + branch_offset;
 end
 else begin 
-    PC = PC+4;
+    PC = PC + 4;
 end
 end
 
