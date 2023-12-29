@@ -13,6 +13,8 @@ reg [31:0] rData1,rData2,immediate,store_off,branch_offset,wrbData;
 wire [31:0] alu_res,n1,n2;
 reg [4:0] rReg1,rReg2,wReg;
 
+
+
 regfile U0(.readData1(n1),
 .readData2(n2),
 .write(RegWrite),
@@ -29,7 +31,44 @@ alu U1(.result(alu_res),
 .zero(Zero)
 );
 
+initial begin
+    PC = INITIAL_PC;
+    dAddress = 0;
+    dWriteData = 0;
+    WriteBackData = 0;
+    rData1 = 0;
+    rData2 = 0;
+    immediate = 0;
+    store_off = 0;
+    branch_offset = 0;
+    wrbData = 0;
+    rReg1 = 0;
+    rReg2 = 0;
+    wReg = 0;
+end 
 
+always @(*) begin
+    //decoding instructions 
+rReg1 = instr[19:15];
+rReg2 = instr[24:20];
+wReg = instr[11:7];
+
+//for immediate instructions 
+immediate = instr[31:20];
+immediate = {{20{immediate[11]}},immediate};
+
+//for store instructions
+store_off = {instr[31:25], instr[11:7]};
+store_off = {{20{store_off[11]}},store_off};
+
+//for branch instructions
+branch_offset[4:1] = instr[11:8];
+branch_offset[10:5] = instr[30:25];
+branch_offset[12] = instr[31];
+branch_offset[11] = instr[7];
+branch_offset = {{19{branch_offset[12]}},branch_offset,1'b0};
+branch_offset = branch_offset<<1; 
+end
 
 always @(posedge clk or posedge rst) begin 
 //update PC or reset
@@ -46,43 +85,24 @@ else begin
 end
 end
 
-//decoding instructions 
-rReg1 = instr[19:15];
-rReg2 = instr[24:20];
-wReg = instr[11:7];
-
-//for immediate instructions 
-immediate = instr[31:20];
-immediate = {{20{immediate[11]}},immediate};
-
-//for store instructions
-store_off = {instr[31:25], instr[11:7]};
-store_off = {{20{store_off[11]}},store_off};
-
-//for branch instructions
-branch_offset[11|4:1] = instr[11:7];
-branch_offset[12|10:5] = instr[31:25];
-branch_offset = {{20{branch_offset[11]}},branch_offset};
-branch_offset = branch_offset<<1;
-
 //mux for deciding the 2nd operand of alu (op2)
 if(ALUSrc) begin
     case(ALUCtrl)
-    4'b1001, 4'b1000, 4'b1010 : 
+    4'b1001, 4'b1000, 4'b1010 : //SLLI, SRLI, SRAI
         rData2 = immediate[4:0];
     4'b0010 : begin 
-        if(RegWrite) begin
+        if(RegWrite) begin //LW
             rData2 = immediate;
         end
-        else rData2 = store_off;
+        else rData2 = store_off; //SW
     end
-    default : rData2 <= immediate;
+    default : rData2 <= immediate; //ALL OTHER IMMEDIATE 
     endcase
 end
 else begin
-    rData2 <= n2;
+    rData2 <= n2; //RR AND BEQ
 end
-rData1 <= n1;
+rData1 <= n1; //FIRST OPERAND IS ALWAYS FROM REGISTER FILE
 
 //mux for writing to register file
 if(MemToReg) begin
@@ -95,3 +115,4 @@ if(MemToReg) begin
     end
 end
 endmodule
+
