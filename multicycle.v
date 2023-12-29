@@ -38,7 +38,7 @@ DATA_MEMORY ram(.we(MemWrite),.dout(dReadData),.din(dWriteData),.addr(dAddress[8
 INSTRUCTION_MEMORY rom(.addr(PC[8:0]),.dout(instr));
 
 
-always @(posedge clk) begin
+always @(instr) begin
 case(instr[6:0])
 //STORE, LOAD INSTRUCTIONS
 SW : begin regwrite = 0; MemWrite = 1; aluctrl = 4'b0010; alusrc = 1; end  
