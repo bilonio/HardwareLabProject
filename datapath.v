@@ -47,7 +47,7 @@ initial begin
     wReg = 0;
 end 
 
-always @(*) begin
+always @(instr) begin
     //decoding instructions 
 rReg1 = instr[19:15];
 rReg2 = instr[24:20];
