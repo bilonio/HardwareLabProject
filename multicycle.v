@@ -48,7 +48,7 @@ LW : begin
 
 //BEQ INSTRUCTIONS
 BEQ : begin 
-    alusrc = 0; aluctrl = 4'b0110; regwrite = 0;
+    alusrc = 0; aluctrl = 4'b0110; regwrite = 0; pcsrc = 1;
     if(zero)
         pcsrc = 1;
     end
