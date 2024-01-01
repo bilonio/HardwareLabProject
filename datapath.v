@@ -31,22 +31,6 @@ alu U1(.result(alu_res),
 .zero(Zero)
 );
 
-initial begin
-    PC = INITIAL_PC;
-    dAddress = 0;
-    dWriteData = 0;
-    WriteBackData = 0;
-    rData1 = 0;
-    rData2 = 0;
-    immediate = 0;
-    store_off = 0;
-    branch_offset = 0;
-    wrbData = 0;
-    rReg1 = 0;
-    rReg2 = 0;
-    wReg = 0;
-end 
-
 always @(instr) begin
     //decoding instructions 
 rReg1 = instr[19:15];
