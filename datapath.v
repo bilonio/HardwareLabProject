@@ -21,7 +21,8 @@ regfile U0(.readData1(n1),
 .writeData(wrbData),
 .readReg1(rReg1),
 .readReg2(rReg2),
-.writeReg(wReg)
+.writeReg(wReg),
+.clk(clk)
 );
 
 alu U1(.result(alu_res), 
