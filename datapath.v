@@ -87,8 +87,8 @@ end
 else begin
     rData2 <= n2; //RR AND BEQ
 end
-rData1 <= n1; //FIRST OPERAND IS ALWAYS FROM REGISTER FILE
-
+rData1 = n1; //FIRST OPERAND IS ALWAYS FROM REGISTER FILE
+dWriteData = n2;
 //mux for writing to register file
 if(MemToReg) begin
         wrbData = dReadData;
@@ -98,6 +98,8 @@ if(MemToReg) begin
         wrbData = alu_res;
         WriteBackData = alu_res;
     end
+dAddress = alu_res;
 end
+
 endmodule
 
