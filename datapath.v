@@ -58,15 +58,15 @@ end
 always @(posedge clk or posedge rst) begin 
 //update PC or reset
 if(rst) begin 
-    PC = INITIAL_PC;
+    PC <= INITIAL_PC;
 end
 
 else if (loadPC) begin 
 if(PCSrc) begin 
-    PC = PC + branch_offset;
+    PC <= PC + branch_offset;
 end
 else begin 
-    PC = PC + 4;
+    PC <= PC + 4;
 end
 end
 
@@ -81,14 +81,15 @@ if(ALUSrc) begin
         end
         else rData2 = store_off; //SW
     end
-    default : rData2 <= immediate; //ALL OTHER IMMEDIATE 
+    default : rData2 = immediate; //ALL OTHER IMMEDIATE 
     endcase
 end
 else begin
-    rData2 <= n2; //RR AND BEQ
+    rData2 = n2; //RR AND BEQ
 end
 rData1 = n1; //FIRST OPERAND IS ALWAYS FROM REGISTER FILE
 dWriteData = n2;
+
 //mux for writing to register file
 if(MemToReg) begin
         wrbData = dReadData;
