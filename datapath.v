@@ -55,7 +55,7 @@ branch_offset = {{19{branch_offset[12]}},branch_offset,1'b0};
 branch_offset = branch_offset<<1; 
 end
 
-always @(posedge clk or posedge rst) begin 
+always @(posedge clk) begin 
 //update PC or reset
 if(rst) begin 
     PC <= INITIAL_PC;
