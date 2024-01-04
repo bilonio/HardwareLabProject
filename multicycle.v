@@ -39,7 +39,8 @@ datapath  #(.INITIAL_PC(INITIAL_PC)) U0(
   .Zero(zero),
   .PCSrc(pcsrc),
   .clk(clk),
-  .rst(rst)
+  .rst(rst),
+  .WriteBackData(WriteBackData)
 );
 
 always @(posedge clk or posedge rst)
