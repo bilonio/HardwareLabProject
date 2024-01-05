@@ -1,7 +1,10 @@
 `include "alu.v"
 `include "regfile.v"
 module datapath 
-#(parameter [31:0] INITIAL_PC=32'h00400000)
+#(parameter [31:0] INITIAL_PC=32'h00400000,
+parameter [6:0] SW=7'b0100011,
+LW=7'b0000011
+,IMMEDIATE=7'b0010011)
 
 (output wire Zero, 
 output reg [31:0] PC,dAddress,dWriteData,WriteBackData,
@@ -9,7 +12,8 @@ input clk,rst,PCSrc,ALUSrc,RegWrite,MemToReg,loadPC,
 input wire [31:0] instr,dReadData,
 input wire [3:0] ALUCtrl
 );
-reg [31:0] rData1,rData2,immediate,store_off,branch_offset,wrbData;
+reg [31:0] rData1,rData2;
+reg [31:0] immediate,store_off,branch_offset,wrbData,branch_offset_sign;
 wire [31:0] alu_res,n1,n2;
 reg [4:0] rReg1,rReg2,wReg;
 
@@ -32,28 +36,57 @@ alu U1(.result(alu_res),
 .zero(Zero)
 );
 
-always @(instr) begin
-    //decoding instructions 
-rReg1 = instr[19:15];
-rReg2 = instr[24:20];
-wReg = instr[11:7];
+always @(instr) begin 
+//decoding instructions 
+rReg1 <= instr[19:15];
+rReg2 <= instr[24:20];
+wReg <= instr[11:7];
 
 //for immediate instructions 
-immediate = instr[31:20];
-immediate = {{20{immediate[11]}},immediate};
+immediate <= {{20{instr[31]}},instr[31:20]};
 
 //for store instructions
-store_off = {instr[31:25], instr[11:7]};
-store_off = {{20{store_off[11]}},store_off};
+store_off <= {{20{instr[31]}},instr[31:25], instr[11:7]};
 
 //for branch instructions
-branch_offset[4:1] = instr[11:8];
-branch_offset[10:5] = instr[30:25];
-branch_offset[12] = instr[31];
-branch_offset[11] = instr[7];
-branch_offset = {{19{branch_offset[12]}},branch_offset,1'b0};
-branch_offset = branch_offset<<1; 
+branch_offset_sign <= {{19{instr[31]}},instr[31],instr[7],instr[30:25],instr[11:8],1'b0};
+branch_offset <= branch_offset_sign<<1;
 end
+
+always @(*) begin
+//mux for deciding the 2nd operand of alu (op2)
+if(ALUSrc) begin 
+    case(instr[6:0])
+    SW : rData2 <= store_off; //SW
+    LW : rData2 <= immediate; //LW
+    IMMEDIATE : case(ALUCtrl)
+    4'b1001, 4'b1000, 4'b1010 : //SLLI, SRLI, SRAI
+        rData2 <= immediate[4:0]; 
+    default : rData2 <= immediate; //ALL OTHER IMMEDIATE
+    endcase
+    default : rData2 <= immediate;  
+    endcase 
+end
+else begin
+    rData2 <= n2; //RR AND BEQ
+end
+dWriteData <= n2; 
+rData1 <= n1; //first operand is always from register file
+end
+always @(*) begin
+//mux for writing to register file
+if(MemToReg) begin
+    wrbData <= dReadData;
+    WriteBackData <= dReadData;
+    end
+else begin
+    wrbData <= alu_res;
+    WriteBackData <= alu_res;
+end
+dAddress <= alu_res;
+end
+
+
 
 always @(posedge clk) begin 
 //update PC or reset
@@ -70,36 +103,6 @@ else begin
 end
 end
 
-//mux for deciding the 2nd operand of alu (op2)
-if(ALUSrc) begin
-    case(ALUCtrl)
-    4'b1001, 4'b1000, 4'b1010 : //SLLI, SRLI, SRAI
-        rData2 = immediate[4:0];
-    4'b0010 : begin 
-        if(RegWrite) begin //LW
-            rData2 = immediate;
-        end
-        else rData2 = store_off; //SW
-    end
-    default : rData2 = immediate; //ALL OTHER IMMEDIATE 
-    endcase
-end
-else begin
-    rData2 = n2; //RR AND BEQ
-end
-rData1 = n1; //FIRST OPERAND IS ALWAYS FROM REGISTER FILE
-dWriteData = n2;
-
-//mux for writing to register file
-if(MemToReg) begin
-        wrbData = dReadData;
-        WriteBackData = dReadData;
-    end
-    else begin
-        wrbData = alu_res;
-        WriteBackData = alu_res;
-    end
-dAddress = alu_res;
 end
 
 endmodule
