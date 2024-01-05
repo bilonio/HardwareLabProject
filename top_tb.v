@@ -43,10 +43,10 @@ multicycle UUT (
     end
     
     // Reset generation
-    initial begin;
+    initial begin
         rst = 1;
         #10;
-        rst = 0;
+        rst = 0;     
     end
     
     // Test stimulus
@@ -54,7 +54,7 @@ initial begin
     $dumpfile("top_tb.vcd");
     $dumpvars(0,top_tb);
     // Write your test cases here
-    #500;
+    #10000;
     $finish;
 end
 
