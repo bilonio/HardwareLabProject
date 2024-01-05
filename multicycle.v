@@ -43,7 +43,7 @@ datapath  #(.INITIAL_PC(INITIAL_PC)) U0(
   .WriteBackData(WriteBackData)
 );
 
-always @(posedge clk or posedge rst)
+always @(posedge clk)
 begin : STATE_MEMORY 
 if(rst)
     current_state <= IF;
@@ -62,13 +62,14 @@ WB : next_state <= IF;
 endcase
 end
 
-always @(current_state or instr)
+always @(current_state)
 begin : OUTPUT_LOGIC
 case(current_state)
 IF : begin 
     loadpc <= 0;
     regwrite <= 0;
     pcsrc <= 0;
+    memtoreg <= 0;
 end
 ID : begin 
 end
@@ -168,7 +169,7 @@ RR: begin
     7'b0100000 : begin 
         case(instr[14:12])
         3'b000 : aluctrl <= 4'b0110; //SUB
-        3'b101 : aluctrl <= 4'b1000; //SRA
+        3'b101 : aluctrl <= 4'b1010; //SRA
         endcase
     end
     endcase
