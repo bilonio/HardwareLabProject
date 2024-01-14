@@ -86,6 +86,7 @@ btnr=1;
 sw=16'hffff;
 
 $display("Test complete");
+#30;
 $finish();
 
 end
